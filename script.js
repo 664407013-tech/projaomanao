@@ -65,13 +65,13 @@ const viewData = {
             </div>
         </div>`,
     
-    facility: `<div class="fade-in px-4 mt-2 max-w-7xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">บริการและห้องพัก</h2><div class="flex flex-wrap justify-center gap-4 mb-8"><button onclick="switchCategory('hotel')" id="tab-btn-hotel" class="tab-btn px-8 py-3 rounded-full border-2 font-bold bg-white">โรงแรม</button><button onclick="switchCategory('resort')" id="tab-btn-resort" class="tab-btn px-8 py-3 rounded-full border-2 font-bold bg-white">รีสอร์ท</button><button onclick="switchCategory('meeting')" id="tab-btn-meeting" class="tab-btn px-8 py-3 rounded-full border-2 font-bold bg-white">ห้องประชุม</button></div><div id="room-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>`,
+    facility: `<div class="fade-in px-4 mt-2 max-w-7xl mx-auto"><h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">บริการและห้องพัก</h2><div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8"><button onclick="switchCategory('hotel')" id="tab-btn-hotel" class="tab-btn px-5 md:px-8 py-2 md:py-3 rounded-full border-2 font-bold bg-white text-sm md:text-base">1. โรงแรม</button><button onclick="switchCategory('resort')" id="tab-btn-resort" class="tab-btn px-5 md:px-8 py-2 md:py-3 rounded-full border-2 font-bold bg-white text-sm md:text-base">2. รีสอร์ท</button><button onclick="switchCategory('meeting')" id="tab-btn-meeting" class="tab-btn px-5 md:px-8 py-2 md:py-3 rounded-full border-2 font-bold bg-white text-sm md:text-base">3. ห้องประชุม</button></div><div id="room-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div></div>`,
     
     attractions: `<div class="fade-in px-4 mt-2 max-w-7xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">ที่เที่ยว & ร้านอาหารแนะนำ (จ.นราธิวาส)</h2><p class="text-center text-gray-500 mb-8 border-b pb-4">สถานที่สวยๆ ของกินอร่อยๆ พร้อมแผนที่ Google Maps ให้นำทางได้ทันที</p><div id="attractions-container"></div></div>`,
     
     products: `<div class="fade-in px-4 mt-2 max-w-6xl mx-auto"><h2 class="text-3xl font-bold text-gray-800 mb-2 text-center">ผลิตภัณฑ์สินค้าของชุมชน</h2><p class="text-center text-gray-500 mb-8 border-b pb-4">สนับสนุนสินค้าท้องถิ่น ส่งเสริมรายได้ให้ชุมชนอ่าวมะนาว</p><div id="products-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div></div>`,
 
-    admin_dashboard: `<div class="fade-in px-4 mt-2 max-w-6xl mx-auto"><div class="bg-white rounded-2xl p-8 shadow-lg border-t-4 border-emerald-600"><h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4"><i class="fa-solid fa-user-tie text-emerald-600 mr-2"></i> ระบบจัดการของ Admin</h2><div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 text-gray-700"><th class="p-4 rounded-tl-xl">วันที่กดจอง</th><th class="p-4">ชื่อลูกค้า</th><th class="p-4">ห้องที่จอง</th><th class="p-4">เช็คอิน - เช็คเอาท์</th><th class="p-4">เบอร์โทรศัพท์</th><th class="p-4 text-center rounded-tr-xl">จัดการ</th></tr></thead><tbody id="admin-table-body"><tr><td colspan="6" class="text-center p-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr></tbody></table></div></div></div>`
+    admin_dashboard: `<div class="fade-in px-4 mt-2 max-w-6xl mx-auto"><div class="bg-white rounded-2xl p-4 md:p-8 shadow-lg border-t-4 border-emerald-600"><h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 border-b pb-4"><i class="fa-solid fa-user-tie text-emerald-600 mr-2"></i> ระบบจัดการของ Admin</h2><div class="admin-table-wrap"><table class="w-full text-left border-collapse min-w-[640px]"><thead><tr class="bg-gray-100 text-gray-700"><th class="p-3 md:p-4 rounded-tl-xl text-sm">วันที่กดจอง</th><th class="p-3 md:p-4 text-sm">ชื่อลูกค้า</th><th class="p-3 md:p-4 text-sm">ห้องที่จอง</th><th class="p-3 md:p-4 text-sm">เช็คอิน - เช็คเอาท์</th><th class="p-3 md:p-4 text-sm">เบอร์โทรศัพท์</th><th class="p-3 md:p-4 text-center rounded-tr-xl text-sm">จัดการ</th></tr></thead><tbody id="admin-table-body"><tr><td colspan="6" class="text-center p-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr></tbody></table></div></div></div>`
 };
 
 async function fetchAvailability() {
@@ -130,20 +130,19 @@ function switchCategory(category) {
 }
 
 function renderAttractions() {
-    let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+    let html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">';
     attractionsData.forEach(item => {
-        // ใช้ลิงก์ภาพใหม่ที่เราจัดเตรียมให้แล้ว
         html += `
             <div class="border rounded-2xl bg-white shadow-sm overflow-hidden card-hover flex flex-col">
-                <img src="${item.img}" class="h-48 object-cover w-full" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                <img src="${item.img}" class="h-44 md:h-48 object-cover w-full" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'" loading="lazy">
                 <div class="p-4 flex-grow">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-lg text-emerald-800 pr-2">${item.name}</h3>
+                        <h3 class="font-bold text-base md:text-lg text-emerald-800 pr-2">${item.name}</h3>
                         <span class="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full whitespace-nowrap">${item.type}</span>
                     </div>
                     <p class="text-sm text-gray-600">${item.desc}</p>
                 </div>
-                <div class="w-full h-40 bg-gray-200 border-t">
+                <div class="w-full attraction-map bg-gray-200 border-t" style="height:140px;">
                     <iframe src="https://www.google.com/maps?q=$${item.mapQ}&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
@@ -205,20 +204,39 @@ async function navigate(page) {
     if(page === 'admin_dashboard') loadAdminData();
 }
 
+// ===== MOBILE NAV =====
+function openMobileNav() {
+    document.getElementById('mobile-nav-drawer').classList.add('open');
+    document.getElementById('mobile-nav-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeMobileNav() {
+    document.getElementById('mobile-nav-drawer').classList.remove('open');
+    document.getElementById('mobile-nav-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
 function toggleModal(id, show) { document.getElementById(id).classList[show ? 'remove' : 'add']('hidden'); }
 function switchModal(closeId, openId) { toggleModal(closeId, false); toggleModal(openId, true); }
 
 function checkLoginStatus() {
     const user = localStorage.getItem('user');
     const authContainer = document.getElementById('auth-container');
+    const mobileAuth = document.getElementById('mobile-auth-container');
     const navMenu = document.getElementById('nav-menu');
     if(document.getElementById('btn-admin')) document.getElementById('btn-admin').remove();
 
     if (user) {
-        authContainer.innerHTML = `<button onclick="handleLogout()" class="bg-red-50 text-red-600 px-6 py-2 rounded-full font-bold hover:bg-red-500 hover:text-white transition">ออกจากระบบ</button>`;
-        if (localStorage.getItem('role') === 'admin') navMenu.insertAdjacentHTML('beforeend', `<button class="nav-btn text-emerald-600 font-bold py-2" id="btn-admin" onclick="navigate('admin_dashboard')">จัดการระบบ (Admin)</button>`);
+        const logoutBtn = `<button onclick="handleLogout()" class="bg-red-50 text-red-600 px-4 py-2 rounded-full font-bold hover:bg-red-500 hover:text-white transition text-sm">ออกจากระบบ</button>`;
+        authContainer.innerHTML = logoutBtn;
+        if (mobileAuth) mobileAuth.innerHTML = `<p class="text-xs text-gray-500 mb-2">เข้าสู่ระบบในชื่อ: <strong>${user}</strong></p>` + logoutBtn.replace('px-4 py-2', 'w-full py-2 text-center');
+        if (localStorage.getItem('role') === 'admin') {
+            navMenu.insertAdjacentHTML('beforeend', `<button class="nav-btn text-emerald-600 font-bold py-2" id="btn-admin" onclick="navigate('admin_dashboard')">จัดการระบบ (Admin)</button>`);
+        }
     } else {
-        authContainer.innerHTML = `<button onclick="toggleModal('loginModal', true)" class="bg-emerald-600 text-white px-6 py-2 rounded-full font-bold hover:bg-emerald-700 transition">เข้าสู่ระบบ</button>`;
+        const loginBtn = `<button onclick="toggleModal('loginModal', true)" class="bg-emerald-600 text-white px-4 py-2 rounded-full font-bold hover:bg-emerald-700 transition text-sm">เข้าสู่ระบบ</button>`;
+        authContainer.innerHTML = loginBtn;
+        if (mobileAuth) mobileAuth.innerHTML = loginBtn.replace('px-4 py-2', 'w-full py-2 text-center block');
     }
 }
 

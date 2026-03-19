@@ -12,12 +12,31 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen relative">
 
+    <!-- Mobile Nav Overlay & Drawer -->
+    <div id="mobile-nav-overlay" onclick="closeMobileNav()"></div>
+    <div id="mobile-nav-drawer">
+        <div class="flex items-center justify-between px-5 py-4 border-b bg-emerald-600">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-umbrella-beach text-2xl text-white"></i>
+                <span class="font-bold text-white text-lg">Ao Manao Resort</span>
+            </div>
+            <button onclick="closeMobileNav()" class="text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex flex-col p-4 gap-1 flex-grow">
+            <button onclick="navigate('home'); closeMobileNav()" class="text-left px-4 py-3 rounded-xl text-gray-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-3"><i class="fa-solid fa-house w-5 text-emerald-500"></i>หน้าหลัก</button>
+            <button onclick="navigate('facility'); closeMobileNav()" class="text-left px-4 py-3 rounded-xl text-gray-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-3"><i class="fa-solid fa-bed w-5 text-emerald-500"></i>บริการ/ห้องพัก</button>
+            <button onclick="navigate('attractions'); closeMobileNav()" class="text-left px-4 py-3 rounded-xl text-gray-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-3"><i class="fa-solid fa-map-location-dot w-5 text-emerald-500"></i>ที่เที่ยวใกล้เคียง</button>
+            <button onclick="navigate('products'); closeMobileNav()" class="text-left px-4 py-3 rounded-xl text-gray-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-3"><i class="fa-solid fa-bag-shopping w-5 text-emerald-500"></i>ผลิตภัณฑ์ชุมชน</button>
+        </nav>
+        <div id="mobile-auth-container" class="p-4 border-t"></div>
+    </div>
+
     <header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center cursor-pointer" onclick="navigate('home')">
-                    <i class="fa-solid fa-umbrella-beach text-3xl text-emerald-600 mr-3"></i>
-                    <span class="font-bold text-2xl text-gray-800">Ao Manao <span class="text-emerald-600">Resort</span></span>
+            <div class="flex justify-between items-center h-16 md:h-20">
+                <div class="flex items-center cursor-pointer gap-2" onclick="navigate('home')">
+                    <i class="fa-solid fa-umbrella-beach text-2xl md:text-3xl text-emerald-600"></i>
+                    <span class="font-bold text-lg md:text-2xl text-gray-800">Ao Manao <span class="text-emerald-600">Resort</span></span>
                 </div>
                 <nav id="nav-menu" class="hidden md:flex space-x-4 lg:space-x-6">
                     <button id="btn-home" onclick="navigate('home')" class="nav-btn text-gray-500 py-2">หน้าหลัก</button>
@@ -25,7 +44,12 @@
                     <button id="btn-attractions" onclick="navigate('attractions')" class="nav-btn text-gray-500 py-2">ที่เที่ยวใกล้เคียง</button>
                     <button id="btn-products" onclick="navigate('products')" class="nav-btn text-gray-500 py-2">ผลิตภัณฑ์ชุมชน</button>
                 </nav>
-                <div id="auth-container"></div>
+                <div class="flex items-center gap-3">
+                    <div id="auth-container" class="hidden md:block"></div>
+                    <button onclick="openMobileNav()" class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition" aria-label="เมนู">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -33,8 +57,7 @@
     <main id="app-content" class="flex-grow py-8 w-full max-w-7xl mx-auto"></main>
 
     <footer class="bg-emerald-900 text-emerald-100 py-6 mt-auto text-center">
-        <p>โรงแรมอ่าวมะนาว&รีสอร์ท จ.นราธิวาส</p>
-        <p>เบอร์โทรศัพท์ติดต่อ 088 801 1222</p>
+        <p>© 2024 โรงแรมอ่าวมะนาว&รีสอร์ท จ.นราธิวาส</p>
     </footer>
 
     <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
@@ -47,8 +70,11 @@
         <a href="https://wa.me/qr/LYT23KFAOFU5M1" target="_blank" class="w-12 h-12 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:-translate-y-1 transition-all duration-300" title="WhatsApp">
             <i class="fa-brands fa-whatsapp text-3xl"></i>
         </a>
-        <a href="https://maps.app.goo.gl/XnsyjRPBesq5hgUD8" target="_blank" class="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:-translate-y-1 transition-all duration-300" title="Google Maps">
+        <a href="https://maps.app.goo.gl/yUuZaQmoKnowUzRe9" target="_blank" class="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:-translate-y-1 transition-all duration-300" title="Google Maps">
             <i class="fa-solid fa-location-dot text-2xl"></i>
+        </a>
+        <a href="tel:0888011222" class="w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:-translate-y-1 transition-all duration-300" title="โทร: 088 801 1222">
+            <i class="fa-solid fa-phone text-xl"></i>
         </a>
     </div>
 
@@ -62,7 +88,6 @@
                 <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700">ล็อกอิน</button>
             </form>
             <div class="mt-4 text-center text-sm">ยังไม่มีบัญชี? <button type="button" onclick="switchModal('loginModal', 'registerModal')" class="text-emerald-600 font-bold hover:underline">สมัครสมาชิก</button></div>
-            
         </div>
     </div>
 
