@@ -5,12 +5,13 @@ import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, updateD
 
 // 2. ป้อนค่าการเชื่อมต่อโปรเจกต์ของคุณ (คัดลอกจาก Firebase Console)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC6dy2ouk0tLx3Rnlvl3oWxcuDnlvPETfc",
+  authDomain: "aomanao-6aeac.firebaseapp.com",
+  projectId: "aomanao-6aeac",
+  storageBucket: "aomanao-6aeac.firebasestorage.app",
+  messagingSenderId: "879817416473",
+  appId: "1:879817416473:web:bcaebbee4246e3ad2eaf88",
+  measurementId: "G-F24XDSPWNF"
 };
 
 // 3. เริ่มต้นการเชื่อมต่อระบบ Firebase
