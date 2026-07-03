@@ -1,5 +1,24 @@
-const API_URL = 'api.php';
+// 1. นำเข้าระบบ Firebase SDK เวอร์ชันล่าสุด (Modular SDK)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+// 2. ป้อนค่าการเชื่อมต่อโปรเจกต์ของคุณ (คัดลอกจาก Firebase Console)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// 3. เริ่มต้นการเชื่อมต่อระบบ Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ข้อมูลห้องพัก สถานที่ท่องเที่ยว และสินค้า (คงเดิมไว้)
 const roomsData = [
     { type: 'hotel', name: 'โรงแรม: ห้อง CV', price: '1,200', max: 2, desc: 'แอร์ / ทีวี / wifi / ตู้เย็น / เครื่องอาบน้ำอุ่น / กาต้มน้ำร้อน / ลานจอดรถ', images: ['images/hotel_cv_1.jpg', 'images/hotel_cv_2.jpg', 'images/hotel_cv_3.jpg'] },
     { type: 'hotel', name: 'โรงแรม: ห้องเตียงเดี่ยว', price: '800', max: 1, desc: 'แอร์ / ทีวี / wifi / ตู้เย็น / เครื่องอาบน้ำอุ่น / ลานจอดรถ', images: ['images/hotel_single_1.jpg', 'images/hotel_single_2.jpg', 'images/hotel_single_3.jpg'] },
@@ -11,7 +30,6 @@ const roomsData = [
     { type: 'meeting', name: 'Ao Manao Camp', price: '2,500', max: 1, desc: 'เหมา 1 วัน | โปรเจคเตอร์, โต๊ะ 10, เก้าอี้ 60-80, ปิ้งย่าง, ห้องน้ำ 10', images: ['images/camp_1.jpg', 'images/camp_2.jpg', 'images/camp_3.jpg'] }
 ];
 
-// 🌟 ใช้รูปภาพจริงของสถานที่ เก็บไว้ในโฟลเดอร์ images/ 🌟
 const attractionsData = [
     { name: "หาดอ่าวมะนาว", type: "ทะเล/ที่เที่ยว", desc: "ชายหาดทอดยาว ต้นสนร่มรื่น ติดกับรีสอร์ทของเราเลยครับ เดินเล่นรับลมทะเลชิลๆ", img: "images/attraction_01_haad_ao_manao.jpg", mapQ: "หาดอ่าวมะนาว+นราธิวาส" },
     { name: "น้ำตกปาโจ", type: "ธรรมชาติ", desc: "น้ำตกที่มีชื่อเสียงที่สุดของนราธิวาส ร่มรื่น ธรรมชาติอุดมสมบูรณ์ เหมาะแก่การพักผ่อน", img: "images/attraction_02_namtok_pajo.jpg", mapQ: "น้ำตกปาโจ+นราธิวาส" },
@@ -74,12 +92,28 @@ const viewData = {
     admin_dashboard: `<div class="fade-in px-4 mt-2 max-w-6xl mx-auto"><div class="bg-white rounded-2xl p-4 md:p-8 shadow-lg border-t-4 border-emerald-600"><h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 border-b pb-4"><i class="fa-solid fa-user-tie text-emerald-600 mr-2"></i> ระบบจัดการของ Admin</h2><div class="admin-table-wrap"><table class="w-full text-left border-collapse min-w-[640px]"><thead><tr class="bg-gray-100 text-gray-700"><th class="p-3 md:p-4 rounded-tl-xl text-sm">วันที่กดจอง</th><th class="p-3 md:p-4 text-sm">ชื่อลูกค้า</th><th class="p-3 md:p-4 text-sm">ห้องที่จอง</th><th class="p-3 md:p-4 text-sm">เช็คอิน - เช็คเอาท์</th><th class="p-3 md:p-4 text-sm">เบอร์โทรศัพท์</th><th class="p-3 md:p-4 text-center rounded-tr-xl text-sm">จัดการ</th></tr></thead><tbody id="admin-table-body"><tr><td colspan="6" class="text-center p-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr></tbody></table></div></div></div>`
 };
 
+// 🔥 แปลงเป็นดึงข้อมูลคิวห้องว่างจาก Firestore
 async function fetchAvailability() {
     try {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'get_availability' }) });
-        const data = await res.json();
-        if(data.status === 'success') availabilityStatus = data.data;
-    } catch(e) { console.error("Error fetching availability"); }
+        // ตั้งค่าห้องว่างเริ่มต้นตามจำนวน max ของแต่ละห้อง
+        roomsData.forEach(room => {
+            availabilityStatus[room.name] = { available: room.max, total: room.max };
+        });
+
+        // ดึงรายการจองทั้งหมดเพื่อคำนวณห้องพักที่ถูกจองไปแล้ว
+        const querySnapshot = await getDocs(collection(db, "bookings"));
+        querySnapshot.forEach((doc) => {
+            const booking = doc.data();
+            if (availabilityStatus[booking.room_name]) {
+                availabilityStatus[booking.room_name].available -= 1;
+                if (availabilityStatus[booking.room_name].available < 0) {
+                    availabilityStatus[booking.room_name].available = 0;
+                }
+            }
+        });
+    } catch(e) { 
+        console.error("Error fetching availability:", e); 
+    }
 }
 
 function switchCategory(category) {
@@ -143,7 +177,7 @@ function renderAttractions() {
                     <p class="text-sm text-gray-600">${item.desc}</p>
                 </div>
                 <div class="w-full attraction-map bg-gray-200 border-t" style="height:140px;">
-                    <iframe src="https://www.google.com/maps?q=$${item.mapQ}&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe src="https://maps.google.com/maps?q=${item.mapQ}&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
         `;
@@ -204,7 +238,6 @@ async function navigate(page) {
     if(page === 'admin_dashboard') loadAdminData();
 }
 
-// ===== MOBILE NAV =====
 function openMobileNav() {
     document.getElementById('mobile-nav-drawer').classList.add('open');
     document.getElementById('mobile-nav-overlay').classList.add('open');
@@ -242,23 +275,59 @@ function checkLoginStatus() {
 
 function handleLogout() { localStorage.clear(); checkLoginStatus(); navigate('home'); }
 
+// 🔥 แปลงระบบสมัครสมาชิก ไปใช้ Firebase Auth + บันทึกชื่อลง Firestore
 async function handleRegister(e) {
     e.preventDefault();
-    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', name: document.getElementById('regName').value, email: document.getElementById('regEmail').value, password: document.getElementById('regPass').value }) });
-    const data = await res.json();
-    alert(data.message); if(data.status === 'success') switchModal('registerModal', 'loginModal');
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPass').value;
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+        
+        // บันทึกข้อมูลโปรไฟล์เพิ่มเติมลง Firestore ในตาราง users
+        await setDoc(doc(db, "users", uid), {
+            name: name,
+            email: email,
+            role: "user" // บัญชีเริ่มต้นจะเป็นผู้ใช้ธรรมดา
+        });
+
+        alert("สมัครสมาชิกสำเร็จ!"); 
+        switchModal('registerModal', 'loginModal');
+    } catch (error) {
+        alert("สมัครสมาชิกไม่สำเร็จ: " + error.message);
+    }
 }
 
+// 🔥 แปลงระบบเข้าสู่ระบบ ไปใช้ Firebase Auth + ดึงบทบาทสิทธิ์ (Role)
 async function handleLogin(e) {
     e.preventDefault();
-    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', email: document.getElementById('loginEmail').value, password: document.getElementById('loginPass').value }) });
-    const data = await res.json();
-    if (data.status === 'success') {
-        localStorage.setItem('user_id', data.user.id); localStorage.setItem('user', data.user.name); localStorage.setItem('role', data.user.role);
-        alert(`เข้าสู่ระบบสำเร็จ! สวัสดีคุณ ${data.user.name}`); 
-        toggleModal('loginModal', false); checkLoginStatus();
-        if(data.user.role === 'admin') navigate('admin_dashboard'); else navigate('facility');
-    } else alert(data.message);
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPass').value;
+
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+
+        // ดึงข้อมูลชื่อและสิทธิ์จากคอลเลกชัน users
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            localStorage.setItem('user_id', uid); 
+            localStorage.setItem('user', userData.name); 
+            localStorage.setItem('role', userData.role);
+
+            alert(`เข้าสู่ระบบสำเร็จ! สวัสดีคุณ ${userData.name}`); 
+            toggleModal('loginModal', false); 
+            checkLoginStatus();
+            if(userData.role === 'admin') navigate('admin_dashboard'); else navigate('facility');
+        } else {
+            alert("ไม่พบข้อมูลบัญชีผู้ใช้ในระบบฐานข้อมูล");
+        }
+    } catch (error) {
+        alert("อีเมลหรือรหัสผ่านไม่ถูกต้อง: " + error.message);
+    }
 }
 
 function openBookingModal(roomName) {
@@ -267,7 +336,6 @@ function openBookingModal(roomName) {
     document.getElementById('checkInDate').value = "";
     document.getElementById('checkOutDate').value = "";
     document.getElementById('bookPhone').value = "";
-    // reset การชำระเงิน
     document.querySelectorAll('input[name="paymentMethod"]').forEach(r => r.checked = false);
     document.querySelectorAll('input[name="transferType"]').forEach(r => r.checked = false);
     document.querySelectorAll('input[name="creditBank"]').forEach(r => r.checked = false);
@@ -288,7 +356,6 @@ function togglePaymentDetail(type) {
     }
 }
 
-// เพิ่ม event listener สำหรับ transferType หลัง DOM โหลด
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus(); navigate('home');
     document.querySelectorAll('input[name="transferType"]').forEach(r => {
@@ -309,6 +376,7 @@ function getRoomPrice(roomName) {
     return room ? parseInt(room.price.replace(',', '')) : 0;
 }
 
+// 🔥 แปลงระบบจองห้องพักลง Firestore คอลเลกชัน bookings
 async function handleBooking(e) {
     e.preventDefault();
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
@@ -330,12 +398,25 @@ async function handleBooking(e) {
     const transferType = document.querySelector('input[name="transferType"]:checked');
     const creditBank   = document.querySelector('input[name="creditBank"]:checked');
 
-    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'book_room', user_id: localStorage.getItem('user_id'), room_name: roomName, check_in: checkIn, check_out: checkOut, phone: phone }) });
-    const data = await res.json();
+    try {
+        // บันทึกรายการจอง
+        await addDoc(collection(db, "bookings"), {
+            user_id: localStorage.getItem('user_id'),
+            customer_name: localStorage.getItem('user'),
+            room_name: roomName,
+            check_in: checkIn,
+            check_out: checkOut,
+            phone: phone,
+            payment_method: payment,
+            created_at: new Date()
+        });
 
-    if (data.status === 'success') {
         toggleModal('bookingModal', false);
-        fetchAvailability().then(() => { if(document.getElementById('room-list-container')) switchCategory(document.querySelector('.tab-btn.active').id.replace('tab-btn-', '')); });
+        fetchAvailability().then(() => { 
+            if(document.getElementById('room-list-container')) 
+                switchCategory(document.querySelector('.tab-btn.active').id.replace('tab-btn-', '')); 
+        });
+
         showReceipt({
             customerName: localStorage.getItem('user'),
             roomName, checkIn, checkOut, phone, payment,
@@ -343,8 +424,8 @@ async function handleBooking(e) {
             creditBank: creditBank ? creditBank.value : null,
             bookingDate: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
         });
-    } else {
-        alert(data.message);
+    } catch (error) {
+        alert("การจองล้มเหลว: " + error.message);
     }
 }
 
@@ -430,80 +511,60 @@ function printReceipt() {
         <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
-            * { margin:0; padding:0; box-sizing:border-box; }
-            body { font-family:'Prompt',sans-serif; padding:24px; color:#1f2937; font-size:14px; }
-            .text-center { text-align:center; }
-            .text-emerald-600 { color:#059669; }
-            .text-emerald-700 { color:#047857; }
-            .text-emerald-800 { color:#065f46; }
-            .text-purple-600 { color:#9333ea; }
-            .text-blue-600 { color:#2563eb; }
-            .text-green-700 { color:#15803d; }
-            .text-yellow-700 { color:#a16207; }
-            .text-gray-400 { color:#9ca3af; }
-            .text-gray-500 { color:#6b7280; }
-            .text-gray-600 { color:#4b5563; }
-            .text-gray-800 { color:#1f2937; }
-            .font-bold { font-weight:700; }
-            .font-medium { font-weight:500; }
-            .text-sm { font-size:12px; }
-            .text-xs { font-size:11px; }
-            .text-base { font-size:14px; }
-            .text-lg { font-size:16px; }
-            .mb-1{margin-bottom:4px;} .mb-2{margin-bottom:8px;} .mb-3{margin-bottom:12px;} .mb-4{margin-bottom:16px;} .mb-6{margin-bottom:24px;}
-            .mt-1{margin-top:4px;} .mt-2{margin-top:8px;} .mt-3{margin-top:12px;}
-            .pt-2{padding-top:8px;} .p-4{padding:16px;}
-            .bg-gray-50 { background:#f9fafb; }
-            .bg-emerald-50 { background:#ecfdf5; }
-            .border { border:1px solid #e5e7eb; }
-            .border-emerald-200 { border-color:#a7f3d0; }
-            .border-t { border-top:1px solid #e5e7eb; }
-            .rounded-xl { border-radius:12px; }
-            .rounded-lg { border-radius:8px; }
-            .rounded-full { border-radius:999px; }
-            .space-y-2 > * + * { margin-top:8px; }
-            .flex { display:flex; }
-            .justify-between { justify-content:space-between; }
-            .inline-block { display:inline-block; }
-            .bg-yellow-100 { background:#fef9c3; padding:4px 12px; }
-            .bg-green-100 { background:#dcfce7; padding:4px 12px; }
-            .w-24 { width:96px; } .h-24 { height:96px; }
-            .mx-auto { margin:0 auto; display:block; }
-            @media print { body { padding:0; } button { display:none; } }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Prompt', sans-serif; padding: 20px; }
         </style>
-        </head><body>${content}
-        <div style="text-align:center;margin-top:24px;">
-            <button onclick="window.print()" style="background:#059669;color:white;border:none;padding:10px 32px;border-radius:8px;font-family:Prompt,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖨️ พิมพ์</button>
-        </div>
+        </head><body>
+        ${content}
+        <script>window.onload = function() { window.print(); window.close(); }</script>
         </body></html>
     `);
     win.document.close();
 }
 
+// 🔥 ดึงข้อมูลคิวจองห้องพักทั้งหมดของร้านมาแสดงผลที่หน้าจอ Admin
 async function loadAdminData() {
     try {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'get_bookings' }) });
-        const data = await res.json();
+        const querySnapshot = await getDocs(collection(db, "bookings"));
         let html = '';
-        if (data.data.length === 0) html = `<tr><td colspan="6" class="text-center p-4 text-gray-500">ยังไม่มีข้อมูลการจอง</td></tr>`;
-        else {
-            data.data.forEach(b => {
-                html += `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4 text-sm text-gray-500">${b.created_at.split(' ')[0]}</td>
-                    <td class="p-4 font-bold text-emerald-700">${b.customer_name}</td>
-                    <td class="p-4">${b.room_name}</td>
-                    <td class="p-4 text-sm">${b.check_in} <br>ถึง ${b.check_out}</td>
-                    <td class="p-4">${b.phone}</td>
-                    <td class="p-4 text-center">
-                        <button onclick="openEditModal(${b.id}, '${b.room_name}', '${b.check_in}', '${b.check_out}', '${b.phone}')" class="text-blue-500 hover:text-blue-700 bg-blue-100 p-2 rounded-lg mx-1" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button onclick="deleteBooking(${b.id})" class="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg mx-1" title="ลบ"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
-            });
+        
+        if (querySnapshot.empty) {
+            html = `<tr><td colspan="6" class="text-center p-4 text-gray-500">ไม่มีข้อมูลการจองในระบบคลาวด์</td></tr>`;
+            document.getElementById('admin-table-body').innerHTML = html;
+            return;
         }
+
+        const bookings = [];
+        querySnapshot.forEach((doc) => {
+            bookings.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // เรียงลำดับตามเวลาจองล่าสุดขึ้นก่อน
+        bookings.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+
+        bookings.forEach((b) => {
+            const bookingDate = b.created_at ? new Date(b.created_at.seconds * 1000).toLocaleDateString('th-TH') : '-';
+            html += `
+                <tr class="border-b hover:bg-gray-50 text-sm text-gray-700">
+                    <td class="p-3 md:p-4">${bookingDate}</td>
+                    <td class="p-3 md:p-4 font-bold text-gray-900">${b.customer_name || 'ไม่ระบุชื่อ'}</td>
+                    <td class="p-3 md:p-4">${b.room_name}</td>
+                    <td class="p-3 md:p-4"><span class="text-emerald-600 font-bold">${b.check_in}</span> ถึง <span class="text-red-600 font-bold">${b.check_out}</span></td>
+                    <td class="p-3 md:p-4">${b.phone}</td>
+                    <td class="p-3 md:p-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openEditModal('${b.id}', '${b.room_name}', '${b.check_in}', '${b.check_out}', '${b.phone}')" class="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-500 hover:text-white transition text-xs"><i class="fa-solid fa-pen-to-square mr-1"></i>แก้ไข</button>
+                            <button onclick="deleteBooking('${b.id}')" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-bold hover:bg-red-500 hover:text-white transition text-xs"><i class="fa-solid fa-trash mr-1"></i>ลบ</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
         document.getElementById('admin-table-body').innerHTML = html;
-    } catch (e) { document.getElementById('admin-table-body').innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`; }
+    } catch (error) {
+        console.error("Error loading admin data:", error);
+        document.getElementById('admin-table-body').innerHTML = `<tr><td colspan="6" class="text-center p-4 text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+    }
 }
 
 function openEditModal(id, roomName, checkIn, checkOut, phone) {
@@ -515,21 +576,55 @@ function openEditModal(id, roomName, checkIn, checkOut, phone) {
     toggleModal('editBookingModal', true);
 }
 
+// 🔥 อัปเดตการแก้ไขคิวจองลง Firestore
 async function handleEditBooking(e) {
     e.preventDefault();
-    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_booking', id: document.getElementById('editBookingId').value, check_in: document.getElementById('editCheckInDate').value, check_out: document.getElementById('editCheckOutDate').value, phone: document.getElementById('editPhone').value }) });
-    const data = await res.json();
-    alert(data.message);
-    if(data.status === 'success') { toggleModal('editBookingModal', false); loadAdminData(); }
-}
+    const id = document.getElementById('editBookingId').value;
+    const check_in = document.getElementById('editCheckInDate').value;
+    const check_out = document.getElementById('editCheckOutDate').value;
+    const phone = document.getElementById('editPhone').value;
 
-async function deleteBooking(id) {
-    if(confirm("คุณแน่ใจหรือไม่ว่าต้องการ 'ลบ' ข้อมูลการจองนี้?")) {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_booking', id: id }) });
-        const data = await res.json();
-        alert(data.message);
-        if(data.status === 'success') loadAdminData();
+    try {
+        await updateDoc(doc(db, 'bookings', id), {
+            check_in: check_in,
+            check_out: check_out,
+            phone: phone
+        });
+        alert("แก้ไขข้อมูลการจองเรียบร้อย!");
+        toggleModal('editBookingModal', false); 
+        loadAdminData();
+    } catch (error) {
+        alert("แก้ไขล้มเหลว: " + error.message);
     }
 }
 
-// DOMContentLoaded ถูกย้ายไปรวมในฟังก์ชัน openBookingModal แล้ว
+// 🔥 ลบข้อมูลคิวจองออกจากคลาวด์ Firestore
+async function deleteBooking(id) {
+    if(confirm("คุณแน่ใจหรือไม่ว่าต้องการ 'ลบ' ข้อมูลการจองนี้?")) {
+        try {
+            await deleteDoc(doc(db, 'bookings', id));
+            alert("ลบข้อมูลการจองสำเร็จ!");
+            loadAdminData();
+        } catch (error) {
+            alert("ลบล้มเหลว: " + error.message);
+        }
+    }
+}
+
+// 🌟 สำคัญมาก: ผูกฟังก์ชันเข้ากับวัตถุ window เพื่อให้ปุ่มในไฟล์ HTML สามารถเรียกใช้งานฟังก์ชันโมดูลเหล่านี้ได้ 🌟
+window.switchCategory = switchCategory;
+window.openBookingModal = openBookingModal;
+window.togglePaymentDetail = togglePaymentDetail;
+window.handleLogout = handleLogout;
+window.handleRegister = handleRegister;
+window.handleLogin = handleLogin;
+window.handleBooking = handleBooking;
+window.printReceipt = printReceipt;
+window.navigate = navigate;
+window.openMobileNav = openMobileNav;
+window.closeMobileNav = closeMobileNav;
+window.toggleModal = toggleModal;
+window.switchModal = switchModal;
+window.openEditModal = openEditModal;
+window.handleEditBooking = handleEditBooking;
+window.deleteBooking = deleteBooking;
